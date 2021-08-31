@@ -33,34 +33,35 @@ defmodule Solid.Argument do
 
     arg
     |> do_get(context, scopes)
-    |> apply_filters(filters, context)
+    |> apply_filters(filters, context, opts)
   end
 
   defp do_get([value: val], _hash, _scopes), do: val
 
   defp do_get([field: keys], context, scopes), do: Context.get_in(context, keys, scopes)
 
-  defp apply_filters(input, nil, _), do: input
-  defp apply_filters(input, [], _), do: input
+  defp apply_filters(input, nil, _, _), do: input
+  defp apply_filters(input, [], _, _), do: input
 
   defp apply_filters(
          input,
          [{:filter, [filter, {:arguments, [{:named_arguments, args}]}]} | filters],
-         context
+         context,
+         opts
        ) do
     values = parse_named_arguments(args, context)
 
     filter
-    |> Filter.apply([input | values])
-    |> apply_filters(filters, context)
+    |> Filter.apply([input | values], opts)
+    |> apply_filters(filters, context, opts)
   end
 
-  defp apply_filters(input, [{:filter, [filter, {:arguments, args}]} | filters], context) do
+  defp apply_filters(input, [{:filter, [filter, {:arguments, args}]} | filters], context, opts) do
     values = for arg <- args, do: get([arg], context)
 
     filter
-    |> Filter.apply([input | values])
-    |> apply_filters(filters, context)
+    |> Filter.apply([input | values], opts)
+    |> apply_filters(filters, context, opts)
   end
 
   defp parse_named_arguments(ast, context) do

@@ -13,10 +13,14 @@ defmodule Solid.Filter do
   iex> Solid.Filter.apply("no_filter_here", [1, 2, 3])
   1
   """
-  def apply(filter, args) do
+  def apply(filter, args, opts \\ []) do
     custom_module = Application.get_env(:solid, :custom_filters, __MODULE__)
+    opts_custom_module = Keyword.get(opts, :custom_filters, __MODULE__)
 
     cond do
+      filter_exists?({opts_custom_module, filter, Enum.count(args)}) ->
+        apply_filter({opts_custom_module, filter, args})
+
       filter_exists?({custom_module, filter, Enum.count(args)}) ->
         apply_filter({custom_module, filter, args})
 

@@ -32,7 +32,11 @@ defmodule Solid.Tag do
 
     result =
       if(Map.has_key?(tags, tag_name)) do
-        [text: tags[tag_name].render(context, tag_data)]
+        if function_exported?(tags[tag_name], :render, 3) do
+          [text: tags[tag_name].render(context, tag_data, options)]
+        else
+          [text: tags[tag_name].render(context, tag_data)]
+        end
       else
         nil
       end
@@ -70,8 +74,8 @@ defmodule Solid.Tag do
     {:result, result} -> result[:result]
   end
 
-  defp do_eval([{:case_exp, field} | [{:whens, when_map} | _]] = tag, context, _options) do
-    result = when_map[Argument.get(field, context)]
+  defp do_eval([{:case_exp, field} | [{:whens, when_map} | _]] = tag, context, options) do
+    result = when_map[Argument.get(field, context, options)]
 
     if result do
       result
@@ -83,9 +87,9 @@ defmodule Solid.Tag do
   defp do_eval(
          [assign_exp: [field: [field_name], argument: argument, filters: filters]],
          context,
-         _options
+         options
        ) do
-    new_value = Argument.get(argument, context, filters: filters)
+    new_value = Argument.get(argument, context, [{:filters, filters} | options])
 
     context = %{context | vars: Map.put(context.vars, field_name, new_value)}
 
