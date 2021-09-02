@@ -99,7 +99,7 @@ defmodule Solid.Parser.Base do
         |> concat(ascii_string([?a..?z, ?A..?Z, ?_], min: 0))
         |> reduce({Enum, :join, []})
 
-      @argument choice([value, field])
+      @argument choice([@value, @field])
                 |> lookahead_not(string(":"))
 
       @named_argument argument_name
@@ -139,7 +139,7 @@ defmodule Solid.Parser.Base do
                               |> ignore(string(","))
                               |> ignore(space)
                             )
-                            |> optional(argument)
+                            |> optional(@argument)
 
       @named_arguments @named_argument
                        |> repeat(
