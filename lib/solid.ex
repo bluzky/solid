@@ -13,14 +13,22 @@ defmodule Solid do
   end
 
   defmodule TemplateError do
-    defexception [:message, :line, :reason]
+    defexception [:message, :line, :column, :reason, :template, :file]
 
     @impl true
-    def exception([reason, line]) do
+    def exception([reason, line, column, template]) do
+      message = """
+      Reason: #{reason}, line: #{elem(line, 0)}, col: #{column}
+      >>> #{template}
+      """
+
       %__MODULE__{
-        message: "Reason: #{reason}, line: #{elem(line, 0)}",
+        message: message,
         reason: reason,
-        line: line
+        line: line,
+        template: template,
+        file: "",
+        column: column
       }
     end
   end
@@ -33,8 +41,12 @@ defmodule Solid do
     parser = Keyword.get(opts, :parser, Solid.Parser)
 
     case parser.parse(text) do
-      {:ok, result, _, _, _, _} -> {:ok, %Template{parsed_template: result}}
-      {:error, reason, _, _, line, _} -> {:error, TemplateError.exception([reason, line])}
+      {:ok, result, _, _, _, _} ->
+        {:ok, %Template{parsed_template: result}}
+
+      {:error, reason, remaining, _, line, col} ->
+        [template | _] = String.split(remaining, "\n", parts: 2)
+        {:error, TemplateError.exception([reason, line, col, template])}
     end
   end
 

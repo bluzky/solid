@@ -99,10 +99,10 @@ defmodule Solid.Expression do
     |> Enum.reverse()
     |> Enum.reduce(nil, fn
       [exp, :bool_and], acc ->
-        do_eval(exp, context) and acc
+        do_eval(exp, context) && acc
 
       [exp, :bool_or], acc ->
-        do_eval(exp, context) or acc
+        do_eval(exp, context) || acc
 
       [exp], nil ->
         do_eval(exp, context)
@@ -115,7 +115,7 @@ defmodule Solid.Expression do
     eval({v1, op, v2})
   end
 
-  defp do_eval(value, context), do: eval(get_argument(value, context))
+  defp do_eval(value, context), do: get_argument(value, context)
 
   defp get_argument([argument: argument, filters: filters], context) do
     Argument.get(argument, context, filters: filters)

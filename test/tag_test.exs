@@ -201,8 +201,7 @@ defmodule Solid.TagTest do
                [
                  assign_exp: [
                    field: ["y"],
-                   argument: [value: "abc"],
-                   filters: []
+                   expression: [[argument: [value: "abc"], filters: []]]
                  ]
                ],
                context,
@@ -219,8 +218,12 @@ defmodule Solid.TagTest do
                [
                  assign_exp: [
                    field: ["y"],
-                   argument: [value: "abc"],
-                   filters: [filter: ["upcase", {:arguments, []}]]
+                   expression: [
+                     [
+                       argument: [value: "abc"],
+                       filters: [filter: ["upcase", {:arguments, []}]]
+                     ]
+                   ]
                  ]
                ],
                context,
@@ -237,8 +240,7 @@ defmodule Solid.TagTest do
                [
                  assign_exp: [
                    field: ["z"],
-                   argument: [field: ["x", "y"]],
-                   filters: []
+                   expression: [[argument: [field: ["x", "y"]], filters: []]]
                  ]
                ],
                context,
@@ -254,8 +256,12 @@ defmodule Solid.TagTest do
                [
                  assign_exp: [
                    field: ["z"],
-                   argument: [field: ["x", "y"]],
-                   filters: [filter: ["upcase", {:arguments, []}]]
+                   expression: [
+                     [
+                       argument: [field: ["x", "y"]],
+                       filters: [filter: ["upcase", {:arguments, []}]]
+                     ]
+                   ]
                  ]
                ],
                context,

@@ -250,8 +250,7 @@ defmodule Solid.Parser.Base do
         |> ignore(space)
         |> ignore(string("="))
         |> ignore(space)
-        |> tag(Argument.argument(), :argument)
-        |> optional(tag(repeat(filter), :filters))
+        |> tag(parsec(:__boolean_expression__), :expression)
         |> ignore(closing_tag)
         |> tag(:assign_exp)
 

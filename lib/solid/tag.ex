@@ -143,12 +143,12 @@ defmodule Solid.Tag do
   end
 
   defp do_eval(
-         [assign_exp: [field: [field_name], argument: argument, filters: filters]],
+         [assign_exp: [field: [field_name], expression: exp]],
          context,
          _options
        ) do
-    new_value = Argument.get(argument, context, filters: filters)
-
+    # Argument.get(argument, context, filters: filters)
+    new_value = eval_expression(exp, context)
     context = %{context | vars: Map.put(context.vars, field_name, new_value)}
 
     {nil, context}
