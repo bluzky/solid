@@ -229,7 +229,7 @@ defmodule Solid.Tag do
     {file_system, instance} = options[:file_system] || {Solid.BlankFileSystem, nil}
 
     template_str = file_system.read_template_file(template, instance)
-    template = Solid.parse!(template_str, options)
+    template = Solid.parse!(template_str, Keyword.put(options, :template, template))
     rendered_text = Solid.render(template, binding_vars, options)
     {[text: rendered_text], context}
   end
@@ -364,5 +364,7 @@ defmodule Solid.Tag do
     eval_expression(elsif_exp[:expression], context)
   end
 
-  defp eval_expression(exps, context), do: Expression.eval(exps, context)
+  defp eval_expression(exps, context) do
+    Expression.eval(exps, context)
+  end
 end

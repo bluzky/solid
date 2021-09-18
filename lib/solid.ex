@@ -16,9 +16,10 @@ defmodule Solid do
     defexception [:message, :line, :column, :reason, :template, :file]
 
     @impl true
-    def exception([reason, line, column, template]) do
+    def exception([reason, file, line, column, template]) do
       message = """
-      Reason: #{reason}, line: #{elem(line, 0)}, col: #{column}
+      Error parsing file: #{file}:#{elem(line, 0)}
+      Reason: #{reason}
       >>> #{template}
       """
 
@@ -27,7 +28,7 @@ defmodule Solid do
         reason: reason,
         line: line,
         template: template,
-        file: "",
+        file: file,
         column: column
       }
     end
@@ -39,14 +40,21 @@ defmodule Solid do
   @spec parse(String.t(), Keyword.t()) :: {:ok, %Template{}} | {:error, %TemplateError{}}
   def parse(text, opts \\ []) do
     parser = Keyword.get(opts, :parser, Solid.Parser)
+    template_file = Keyword.get(opts, :template)
 
     case parser.parse(text) do
       {:ok, result, _, _, _, _} ->
         {:ok, %Template{parsed_template: result}}
 
-      {:error, reason, remaining, _, line, col} ->
+      {:error, reason, remaining, _, {l, c} = line, col} ->
+        String.slice(text, 0, c)
+        |> IO.inspect()
+
+        String.slice(text, 0, col)
+        |> IO.inspect()
+
         [template | _] = String.split(remaining, "\n", parts: 2)
-        {:error, TemplateError.exception([reason, line, col, template])}
+        {:error, TemplateError.exception([reason, template_file, line, col, template])}
     end
   end
 
