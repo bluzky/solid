@@ -1,6 +1,6 @@
 defmodule Solid.Tag.Assign do
   import NimbleParsec
-  alias Solid.Parser.{BaseTag, Literal, Variable, Expression}
+  alias Solid.Parser.{BaseTag, Literal, Variable}
 
   @behaviour Solid.Tag
 
@@ -25,7 +25,7 @@ defmodule Solid.Tag.Assign do
         context,
         _options
       ) do
-    new_value = Expression.eval(exp, context)
+    new_value = Solid.Expression.eval(exp, context)
 
     context = %{context | vars: Map.put(context.vars, field_name, new_value)}
     {nil, context}
