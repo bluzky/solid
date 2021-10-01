@@ -41,7 +41,7 @@ defmodule Solid.Tag.Render do
     {file_system, instance} = options[:file_system] || {Solid.BlankFileSystem, nil}
 
     template_str = file_system.read_template_file(template, instance)
-    template = Solid.parse!(template_str, options)
+    template = Solid.parse!(template_str, [{:template, template} | options])
     rendered_text = Solid.render(template, binding_vars, options)
     {[text: rendered_text], context}
   end

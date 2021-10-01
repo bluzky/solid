@@ -16,9 +16,9 @@ defmodule Solid do
     defexception [:message, :line, :column, :reason, :template, :file]
 
     @impl true
-    def exception([reason, file, line, column, template]) do
+    def exception([reason, file, line, template]) do
       message = """
-      Error parsing file: #{file}:#{elem(line, 0)}
+      Error parsing file: #{file}:#{line}
       Reason: #{reason}
       >>> #{template}
       """
@@ -28,8 +28,7 @@ defmodule Solid do
         reason: reason,
         line: line,
         template: template,
-        file: file,
-        column: column
+        file: file
       }
     end
   end
@@ -46,15 +45,24 @@ defmodule Solid do
       {:ok, result, _, _, _, _} ->
         {:ok, %Template{parsed_template: result}}
 
-      {:error, reason, remaining, _, {l, c} = line, col} ->
-        String.slice(text, 0, c)
-        |> IO.inspect()
+      {:error, reason, remaining, _, {line, _}, _} ->
+        {line, reason, remaining} =
+          Enum.reduce_while(1..100, {line, reason, remaining}, fn _, {line, _, remaining} ->
+            case parser.parse(remaining) do
+              {:error, reason, remaining, _, {l, _}, _} ->
+                if l == 1 do
+                  {:halt, {line + l, reason, remaining}}
+                else
+                  {:cont, {line + l, reason, remaining}}
+                end
 
-        String.slice(text, 0, col)
-        |> IO.inspect()
+              _ ->
+                {:halt, {0, nil, ""}}
+            end
+          end)
 
         [template | _] = String.split(remaining, "\n", parts: 2)
-        {:error, TemplateError.exception([reason, template_file, line, col, template])}
+        {:error, TemplateError.exception([reason, template_file, line, template])}
     end
   end
 
