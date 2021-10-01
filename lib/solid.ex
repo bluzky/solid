@@ -13,14 +13,22 @@ defmodule Solid do
   end
 
   defmodule TemplateError do
-    defexception [:message, :line, :reason]
+    defexception [:message, :line, :column, :reason, :template, :file]
 
     @impl true
-    def exception([reason, line]) do
+    def exception([reason, file, line, template]) do
+      message = """
+      Error parsing file: #{file}:#{line}
+      Reason: #{reason}
+      >>> #{template}
+      """
+
       %__MODULE__{
-        message: "Reason: #{reason}, line: #{elem(line, 0)}",
+        message: message,
         reason: reason,
-        line: line
+        line: line,
+        template: template,
+        file: file
       }
     end
   end
@@ -31,10 +39,30 @@ defmodule Solid do
   @spec parse(String.t(), Keyword.t()) :: {:ok, %Template{}} | {:error, %TemplateError{}}
   def parse(text, opts \\ []) do
     parser = Keyword.get(opts, :parser, Solid.Parser)
+    template_file = Keyword.get(opts, :template)
 
     case parser.parse(text) do
-      {:ok, result, _, _, _, _} -> {:ok, %Template{parsed_template: result}}
-      {:error, reason, _, _, line, _} -> {:error, TemplateError.exception([reason, line])}
+      {:ok, result, _, _, _, _} ->
+        {:ok, %Template{parsed_template: result}}
+
+      {:error, reason, remaining, _, {line, _}, _} ->
+        {line, reason, remaining} =
+          Enum.reduce_while(1..100, {line, reason, remaining}, fn _, {line, _, remaining} ->
+            case parser.parse(remaining) do
+              {:error, reason, remaining, _, {l, _}, _} ->
+                if l == 1 do
+                  {:halt, {line + l, reason, remaining}}
+                else
+                  {:cont, {line + l, reason, remaining}}
+                end
+
+              _ ->
+                {:halt, {0, nil, ""}}
+            end
+          end)
+
+        [template | _] = String.split(remaining, "\n", parts: 2)
+        {:error, TemplateError.exception([reason, template_file, line, template])}
     end
   end
 
